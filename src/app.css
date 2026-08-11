@@ -187,6 +187,10 @@
   flex-shrink: 0;
 }
 
+.backlog-add {
+  flex-shrink: 0;
+}
+
 .board-dates {
   font-size: 12.5px;
   color: var(--slate);
@@ -226,8 +230,11 @@
   white-space: nowrap;
 }
 
-.board-add {
+.board-actions {
   margin-top: 20px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* ---------- Kanban columns ---------- */
@@ -322,6 +329,11 @@
   background: var(--ink-mid);
 }
 
+.btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .btn-ghost {
   background: transparent;
   border: 1px solid var(--line);
@@ -384,6 +396,13 @@
   color: var(--charcoal);
 }
 
+.modal-description {
+  margin: 6px 0 0;
+  color: var(--slate);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
 .modal-eyebrow {
   font-size: 11px;
   color: var(--ink);
@@ -436,6 +455,122 @@
   gap: 8px;
 }
 
+/* ---------- Bulk add ---------- */
+
+.bulk-task-modal {
+  max-width: 520px;
+}
+
+.bulk-task-modal textarea {
+  min-height: 180px;
+  line-height: 1.5;
+}
+
+.bulk-separator-field {
+  max-width: 240px;
+}
+
+.bulk-task-summary {
+  color: var(--slate);
+  font-size: 12.5px;
+}
+
+.bulk-task-actions {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.bulk-toast {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(520px, calc(100vw - 40px));
+  padding: 14px 14px 14px 16px;
+  color: #fff;
+  background: var(--ink-deep);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  animation: toast-in 180ms ease-out;
+}
+
+.bulk-toast-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  color: #fff;
+  background: var(--green);
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.bulk-toast-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13.5px;
+}
+
+.bulk-toast-copy span {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+}
+
+.bulk-toast-timer {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+}
+
+.bulk-toast-undo,
+.bulk-toast-close {
+  color: #fff;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.bulk-toast-undo {
+  padding: 6px 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bulk-toast-undo:hover {
+  text-decoration: underline;
+}
+
+.bulk-toast-close {
+  align-self: flex-start;
+  padding: 0 2px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.bulk-toast-close:hover {
+  color: #fff;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 860px) {
@@ -460,5 +595,24 @@
   }
   .app-main {
     padding: 20px;
+  }
+
+  .board-header {
+    flex-wrap: wrap;
+  }
+
+  .backlog-add {
+    margin-left: auto;
+  }
+
+  .bulk-toast {
+    right: 20px;
+    bottom: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .bulk-toast-copy {
+    flex-basis: calc(100% - 76px);
   }
 }

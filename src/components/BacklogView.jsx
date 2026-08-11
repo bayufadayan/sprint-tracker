@@ -11,6 +11,9 @@ export default function BacklogView({ tasks, onTaskClick, onAddTask }) {
             Tugas yang belum masuk sprint mana pun. Tarik ke sprint kapan pun siap.
           </p>
         </div>
+        <button className="btn-primary backlog-add" onClick={onAddTask}>
+          + Tambah ke backlog
+        </button>
       </div>
 
       <div className="backlog-list">
@@ -27,9 +30,6 @@ export default function BacklogView({ tasks, onTaskClick, onAddTask }) {
         ) : null}
       </div>
 
-      <button className="btn-primary board-add" onClick={onAddTask}>
-        + Tambah ke backlog
-      </button>
     </div>
   );
 }

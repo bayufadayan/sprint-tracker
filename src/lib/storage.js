@@ -78,8 +78,27 @@ export function saveTask(task) {
   return task;
 }
 
+export function saveTasks(newTasks) {
+  const tasks = read(KEYS.tasks);
+  const createdAt = new Date().toISOString();
+  const savedTasks = newTasks.map((task) => ({
+    ...task,
+    id: makeId("TSK"),
+    createdAt,
+  }));
+
+  write(KEYS.tasks, [...tasks, ...savedTasks]);
+  return savedTasks;
+}
+
 export function deleteTask(taskId) {
   const tasks = read(KEYS.tasks).filter((t) => t.id !== taskId);
+  write(KEYS.tasks, tasks);
+}
+
+export function deleteTasks(taskIds) {
+  const ids = new Set(taskIds);
+  const tasks = read(KEYS.tasks).filter((task) => !ids.has(task.id));
   write(KEYS.tasks, tasks);
 }
 

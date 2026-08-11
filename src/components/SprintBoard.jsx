@@ -23,6 +23,7 @@ export default function SprintBoard({
   tasks,
   onTaskClick,
   onAddTask,
+  onBulkAddTask,
   onEditSprint,
   onDropTask,
 }) {
@@ -104,9 +105,14 @@ export default function SprintBoard({
         })}
       </div>
 
-      <button className="btn-primary board-add" onClick={onAddTask}>
-        + Tambah tugas ke sprint ini
-      </button>
+      <div className="board-actions">
+        <button className="btn-primary" onClick={onAddTask}>
+          + Tambah tugas ke sprint ini
+        </button>
+        <button className="btn-ghost" onClick={onBulkAddTask}>
+          + Tambah tugas massal
+        </button>
+      </div>
     </div>
   );
 }

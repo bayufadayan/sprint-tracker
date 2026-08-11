@@ -1,17 +1,21 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar.jsx";
 import BacklogView from "./components/BacklogView.jsx";
 import SprintBoard from "./components/SprintBoard.jsx";
 import TaskModal from "./components/TaskModal.jsx";
 import GlossaryView from "./components/GlossaryView.jsx";
 import SprintModal from "./components/SprintModal.jsx";
+import BulkTaskModal from "./components/BulkTaskModal.jsx";
+import BulkAddToast from "./components/BulkAddToast.jsx";
 import {
   getSprints,
   getTasks,
   saveSprint,
   deleteSprint,
   saveTask,
+  saveTasks,
   deleteTask,
+  deleteTasks,
   updateTaskStatus,
 } from "./lib/storage.js";
 import "./app.css";
@@ -24,6 +28,8 @@ export default function App() {
 
   const [taskModal, setTaskModal] = useState(null); // { task } | { forSprintId } | null
   const [sprintModal, setSprintModal] = useState(null); // { sprint } | {} | null
+  const [bulkTaskModal, setBulkTaskModal] = useState(false);
+  const [bulkToast, setBulkToast] = useState(null); // { taskIds, count } | null
 
   useEffect(() => {
     setSprints(getSprints());
@@ -61,6 +67,36 @@ export default function App() {
     refresh();
     setTaskModal(null);
   }
+
+  function handleBulkSave(titles) {
+    const savedTasks = saveTasks(
+      titles.map((title) => ({
+        title,
+        description: "",
+        priority: "med",
+        sprintId: activeSprint.id,
+        status: "todo",
+      }))
+    );
+
+    refresh();
+    setBulkTaskModal(false);
+    setBulkToast({
+      taskIds: savedTasks.map((task) => task.id),
+      count: savedTasks.length,
+    });
+  }
+
+  function handleUndoBulkAdd() {
+    if (!bulkToast) return;
+    deleteTasks(bulkToast.taskIds);
+    refresh();
+    setBulkToast(null);
+  }
+
+  const handleCloseBulkToast = useCallback(() => {
+    setBulkToast(null);
+  }, []);
 
   function handleSaveSprint(sprint) {
     const saved = saveSprint(sprint);
@@ -110,6 +146,7 @@ export default function App() {
             tasks={sprintTasks}
             onTaskClick={(task) => setTaskModal({ task })}
             onAddTask={() => setTaskModal({ forSprintId: activeSprint.id })}
+            onBulkAddTask={() => setBulkTaskModal(true)}
             onEditSprint={(sprint) => setSprintModal({ sprint })}
             onDropTask={handleDropTask}
           />
@@ -144,6 +181,23 @@ export default function App() {
           onSave={handleSaveSprint}
           onDelete={handleDeleteSprint}
           onClose={() => setSprintModal(null)}
+        />
+      ) : null}
+
+      {bulkTaskModal && activeSprint ? (
+        <BulkTaskModal
+          sprintName={activeSprint.name}
+          onSave={handleBulkSave}
+          onClose={() => setBulkTaskModal(false)}
+        />
+      ) : null}
+
+      {bulkToast ? (
+        <BulkAddToast
+          key={bulkToast.taskIds.join(",")}
+          count={bulkToast.count}
+          onUndo={handleUndoBulkAdd}
+          onClose={handleCloseBulkToast}
         />
       ) : null}
     </div>
