@@ -1,3 +1,5 @@
+import { getSprintGroups } from "../lib/sprintChain.js";
+
 function formatShortDate(iso) {
   return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 }
@@ -12,6 +14,27 @@ export default function Sidebar({
   onNewSprint,
   onSelectGlossary,
 }) {
+  const sprintGroups = getSprintGroups(sprints);
+
+  function sprintButton(sprint, isNested = false) {
+    return (
+      <button
+        key={sprint.id}
+        className={`sidebar-item ${isNested ? "is-nested" : ""} ${
+          activeView === "sprint" && activeSprintId === sprint.id ? "is-active" : ""
+        }`}
+        onClick={() => onSelectSprint(sprint.id)}
+      >
+        <span className="sidebar-item-main">
+          <span className="sidebar-item-name">{sprint.name}</span>
+          <span className="sidebar-item-dates mono">
+            {formatShortDate(sprint.startDate)} – {formatShortDate(sprint.endDate)}
+          </span>
+        </span>
+      </button>
+    );
+  }
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -19,14 +42,14 @@ export default function Sidebar({
         <span className="sidebar-brand-name">Sprintline</span>
       </div>
 
-<button
-	  className={`sidebar-item sidebar-glossary ${
-	    activeView === "glossary" ? "is-active" : ""
-	  }`}
-	  onClick={onSelectGlossary}
-	>
-	  <span>Grossary</span>
-	</button>
+      <button
+        className={`sidebar-item sidebar-glossary ${
+          activeView === "glossary" ? "is-active" : ""
+        }`}
+        onClick={onSelectGlossary}
+      >
+        <span>Glossary</span>
+      </button>
 
       <button
         className={`sidebar-item ${activeView === "backlog" ? "is-active" : ""}`}
@@ -39,22 +62,20 @@ export default function Sidebar({
       <div className="sidebar-section-label">Sprint</div>
 
       <div className="sidebar-sprints">
-        {sprints.map((s) => (
-          <button
-            key={s.id}
-            className={`sidebar-item ${
-              activeView === "sprint" && activeSprintId === s.id ? "is-active" : ""
-            }`}
-            onClick={() => onSelectSprint(s.id)}
-          >
-            <span className="sidebar-item-main">
-              <span className="sidebar-item-name">{s.name}</span>
-              <span className="sidebar-item-dates mono">
-                {formatShortDate(s.startDate)} – {formatShortDate(s.endDate)}
-              </span>
-            </span>
-          </button>
-        ))}
+        {sprintGroups.map((group) =>
+          group.type === "folder" ? (
+            <div className="sidebar-sprint-folder" key={group.id}>
+              <div className="sidebar-folder-label">
+                <span aria-hidden="true">▾</span>
+                <span>{group.label}</span>
+                <span className="mono">{group.sprints.length}</span>
+              </div>
+              {group.sprints.map((sprint) => sprintButton(sprint, true))}
+            </div>
+          ) : (
+            sprintButton(group.sprints[0])
+          )
+        )}
         {sprints.length === 0 ? (
           <p className="sidebar-empty">Belum ada sprint.</p>
         ) : null}

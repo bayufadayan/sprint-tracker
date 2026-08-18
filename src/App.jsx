@@ -17,7 +17,10 @@ import {
   deleteTask,
   deleteTasks,
   updateTaskStatus,
+  createSprintContinuation,
+  releaseSpecificBacklogTask,
 } from "./lib/storage.js";
+import { getSprintChain } from "./lib/sprintChain.js";
 import "./app.css";
 
 export default function App() {
@@ -106,6 +109,38 @@ export default function App() {
     setView("sprint");
   }
 
+  function handleCreateContinuation() {
+    if (!activeSprint) return;
+    const saved = createSprintContinuation(activeSprint.id);
+    if (!saved) return;
+    refresh();
+    setActiveSprintId(saved.id);
+    setView("sprint");
+  }
+
+  function handleAddSpecificBacklogTask({ title, priority }) {
+    if (!activeSprint) return;
+    saveTask({
+      title,
+      description: "",
+      priority,
+      sprintId: null,
+      status: "backlog",
+      specificBacklogSprintId: activeSprint.id,
+    });
+    refresh();
+  }
+
+  function handleReleaseSpecificBacklogTask(taskId, sprintId) {
+    releaseSpecificBacklogTask(taskId, sprintId);
+    refresh();
+  }
+
+  function handleDeleteSpecificBacklogTask(taskId) {
+    deleteTask(taskId);
+    refresh();
+  }
+
   function handleDeleteSprint(sprintId) {
     deleteSprint(sprintId);
     refresh();
@@ -119,9 +154,13 @@ export default function App() {
     refresh();
   }
 
-  const backlogTasks = tasks.filter((t) => !t.sprintId);
+  const backlogTasks = tasks.filter((t) => !t.sprintId && !t.specificBacklogSprintId);
   const sprintTasks = activeSprint
     ? tasks.filter((t) => t.sprintId === activeSprint.id)
+    : [];
+  const linkedSprints = activeSprint ? getSprintChain(sprints, activeSprint.id) : [];
+  const specificBacklogTasks = activeSprint
+    ? tasks.filter((task) => task.specificBacklogSprintId === activeSprint.id)
     : [];
 
   return (
@@ -149,6 +188,13 @@ export default function App() {
             onBulkAddTask={() => setBulkTaskModal(true)}
             onEditSprint={(sprint) => setSprintModal({ sprint })}
             onDropTask={handleDropTask}
+            linkedSprints={linkedSprints}
+            specificBacklogTasks={specificBacklogTasks}
+            onCreateContinuation={handleCreateContinuation}
+            onSelectSprint={handleSelectSprint}
+            onAddSpecificBacklogTask={handleAddSpecificBacklogTask}
+            onReleaseSpecificBacklogTask={handleReleaseSpecificBacklogTask}
+            onDeleteSpecificBacklogTask={handleDeleteSpecificBacklogTask}
           />
           
         ) : (

@@ -27,6 +27,8 @@ npm run preview
 - Buka sprint, tambah tugas langsung ke sprint itu, atau pindahin task
   dari backlog lewat tombol "Ubah" (klik kartu task) lalu ganti field Sprint.
 - Drag task antar kolom (To Do / Doing / Done) buat update status.
+- Klik **Buat Lanjutan** untuk membuat sprint berikutnya dengan nomor dan rentang tanggal otomatis. Rantai dua sprint atau lebih tampil sebagai folder di sidebar.
+- Gunakan **Buat task spesific backlog** di atas board untuk menyimpan task khusus, lalu keluarkan ke sprint aktif atau sprint lain dalam rantai yang sama.
 - Klik nama sprint di board buat ubah tanggal/tujuan, atau hapus sprint
   (task-nya otomatis balik ke backlog, tidak ikut kehapus).
 

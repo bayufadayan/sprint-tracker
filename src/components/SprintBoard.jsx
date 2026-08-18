@@ -1,4 +1,5 @@
 import TaskCard from "./TaskCard.jsx";
+import SprintBacklog from "./SprintBacklog.jsx";
 
 const COLUMNS = [
   { key: "todo", label: "To Do" },
@@ -26,6 +27,13 @@ export default function SprintBoard({
   onBulkAddTask,
   onEditSprint,
   onDropTask,
+  linkedSprints,
+  specificBacklogTasks,
+  onCreateContinuation,
+  onSelectSprint,
+  onAddSpecificBacklogTask,
+  onReleaseSpecificBacklogTask,
+  onDeleteSpecificBacklogTask,
 }) {
   const total = tasks.length;
   const done = tasks.filter((t) => t.status === "done").length;
@@ -34,6 +42,9 @@ export default function SprintBoard({
   const today = new Date().toISOString().slice(0, 10);
   const daysLeft = daysBetween(today, sprint.endDate);
   const isOver = daysLeft < 0;
+  const sprintIndex = linkedSprints.findIndex((item) => item.id === sprint.id);
+  const previousSprint = linkedSprints[sprintIndex - 1] || null;
+  const nextSprint = linkedSprints[sprintIndex + 1] || null;
 
   return (
     <div className="board">
@@ -44,6 +55,21 @@ export default function SprintBoard({
             {sprint.name}
           </h1>
           {sprint.goal ? <p className="board-goal">{sprint.goal}</p> : null}
+          {linkedSprints.length > 1 ? (
+            <div className="sprint-chain-nav">
+              {previousSprint ? (
+                <button className="text-link" onClick={() => onSelectSprint(previousSprint.id)}>
+                  ← {previousSprint.name}
+                </button>
+              ) : null}
+              <span className="mono">{sprintIndex + 1}/{linkedSprints.length}</span>
+              {nextSprint ? (
+                <button className="text-link" onClick={() => onSelectSprint(nextSprint.id)}>
+                  {nextSprint.name} →
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="board-meta">
@@ -54,6 +80,9 @@ export default function SprintBoard({
           >
             {isOver ? "Sprint selesai" : `${daysLeft} hari lagi`}
           </div>
+          <button className="btn-ghost board-continuation" onClick={onCreateContinuation}>
+            Buat Lanjutan
+          </button>
         </div>
       </div>
 
@@ -65,6 +94,15 @@ export default function SprintBoard({
           {done}/{total} selesai · {pct}%
         </span>
       </div>
+
+      <SprintBacklog
+        sprint={sprint}
+        linkedSprints={linkedSprints}
+        tasks={specificBacklogTasks}
+        onAdd={onAddSpecificBacklogTask}
+        onRelease={onReleaseSpecificBacklogTask}
+        onDelete={onDeleteSpecificBacklogTask}
+      />
 
       <div className="board-columns">
         {COLUMNS.map((col) => {

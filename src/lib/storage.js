@@ -1,3 +1,5 @@
+import { getContinuationDates, getSprintChain, nextSprintName } from "./sprintChain.js";
+
 // Semua data disimpan di localStorage browser. Tidak ada server, tidak ada akun.
 // Format kunci: "sprintline:sprints" dan "sprintline:tasks"
 
@@ -48,13 +50,57 @@ export function saveSprint(sprint) {
   return sprint;
 }
 
+export function createSprintContinuation(sprintId) {
+  const sprints = read(KEYS.sprints);
+  const chain = getSprintChain(sprints, sprintId);
+  const source = chain.at(-1);
+  if (!source) return null;
+
+  const continuation = {
+    id: makeId("SPR"),
+    name: nextSprintName(source.name),
+    goal: "",
+    ...getContinuationDates(source.startDate, source.endDate),
+    previousSprintId: source.id,
+    nextSprintId: null,
+  };
+
+  const sourceIndex = sprints.findIndex((sprint) => sprint.id === source.id);
+  sprints[sourceIndex] = { ...source, nextSprintId: continuation.id };
+  sprints.push(continuation);
+  write(KEYS.sprints, sprints);
+  return continuation;
+}
+
 export function deleteSprint(sprintId) {
-  const sprints = read(KEYS.sprints).filter((s) => s.id !== sprintId);
+  const existingSprints = read(KEYS.sprints);
+  const deletedSprint = existingSprints.find((s) => s.id === sprintId);
+  const replacementId = deletedSprint?.previousSprintId || deletedSprint?.nextSprintId || null;
+  const sprints = existingSprints
+    .filter((s) => s.id !== sprintId)
+    .map((sprint) => {
+      if (sprint.id === deletedSprint?.previousSprintId) {
+        return { ...sprint, nextSprintId: deletedSprint.nextSprintId || null };
+      }
+      if (sprint.id === deletedSprint?.nextSprintId) {
+        return { ...sprint, previousSprintId: deletedSprint.previousSprintId || null };
+      }
+      return sprint;
+    });
   write(KEYS.sprints, sprints);
   // Task yang ada di sprint ini dikembalikan ke backlog, bukan ikut terhapus.
-  const tasks = read(KEYS.tasks).map((t) =>
-    t.sprintId === sprintId ? { ...t, sprintId: null, status: "backlog" } : t
-  );
+  const tasks = read(KEYS.tasks).map((task) => {
+    if (task.sprintId === sprintId) {
+      return { ...task, sprintId: null, status: "backlog" };
+    }
+    if (task.specificBacklogSprintId === sprintId) {
+      const nextTask = { ...task };
+      if (replacementId) nextTask.specificBacklogSprintId = replacementId;
+      else delete nextTask.specificBacklogSprintId;
+      return nextTask;
+    }
+    return task;
+  });
   write(KEYS.tasks, tasks);
 }
 
@@ -65,17 +111,31 @@ export function getTasks() {
 }
 
 export function saveTask(task) {
+  const normalizedTask = { ...task };
+  if (normalizedTask.sprintId) delete normalizedTask.specificBacklogSprintId;
   const tasks = read(KEYS.tasks);
-  if (task.id) {
-    const idx = tasks.findIndex((t) => t.id === task.id);
-    if (idx !== -1) tasks[idx] = task;
+  if (normalizedTask.id) {
+    const idx = tasks.findIndex((t) => t.id === normalizedTask.id);
+    if (idx !== -1) tasks[idx] = normalizedTask;
   } else {
-    task.id = makeId("TSK");
-    task.createdAt = new Date().toISOString();
-    tasks.push(task);
+    normalizedTask.id = makeId("TSK");
+    normalizedTask.createdAt = new Date().toISOString();
+    tasks.push(normalizedTask);
   }
   write(KEYS.tasks, tasks);
-  return task;
+  return normalizedTask;
+}
+
+export function releaseSpecificBacklogTask(taskId, sprintId) {
+  const tasks = read(KEYS.tasks);
+  const index = tasks.findIndex((task) => task.id === taskId);
+  if (index === -1) return null;
+
+  const releasedTask = { ...tasks[index], sprintId, status: "todo" };
+  delete releasedTask.specificBacklogSprintId;
+  tasks[index] = releasedTask;
+  write(KEYS.tasks, tasks);
+  return releasedTask;
 }
 
 export function saveTasks(newTasks) {
