@@ -162,13 +162,40 @@ export function deleteTasks(taskIds) {
   write(KEYS.tasks, tasks);
 }
 
-export function updateTaskStatus(taskId, status) {
+export function updateTaskPosition(taskId, status, targetTaskId = null, placement = "after") {
   const tasks = read(KEYS.tasks);
   const idx = tasks.findIndex((t) => t.id === taskId);
-  if (idx !== -1) {
-    tasks[idx].status = status;
-    write(KEYS.tasks, tasks);
+  if (idx === -1) return null;
+
+  const [task] = tasks.splice(idx, 1);
+  task.status = status;
+
+  const targetIndex = targetTaskId
+    ? tasks.findIndex(
+        (candidate) =>
+          candidate.id === targetTaskId &&
+          candidate.sprintId === task.sprintId &&
+          candidate.status === status
+      )
+    : -1;
+
+  if (targetIndex !== -1) {
+    const insertAt = placement === "before" ? targetIndex : targetIndex + 1;
+    tasks.splice(insertAt, 0, task);
+  } else {
+    const lastTaskInColumn = tasks.findLastIndex(
+      (candidate) => candidate.sprintId === task.sprintId && candidate.status === status
+    );
+    const insertAt = lastTaskInColumn === -1 ? tasks.length : lastTaskInColumn + 1;
+    tasks.splice(insertAt, 0, task);
   }
+
+  write(KEYS.tasks, tasks);
+  return task;
+}
+
+export function updateTaskStatus(taskId, status) {
+  return updateTaskPosition(taskId, status);
 }
 
 export function moveTaskToSprint(taskId, sprintId) {

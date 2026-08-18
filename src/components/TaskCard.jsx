@@ -14,7 +14,10 @@ export default function TaskCard({ task, onClick, dragHandleProps }) {
       {...dragHandleProps}
     >
       <div className="task-card-top">
-        <span className="task-card-id mono">{task.id}</span>
+        <span className="task-card-identity">
+          <span className="task-card-grip" aria-hidden="true">⋮⋮</span>
+          <span className="task-card-id mono">{task.id}</span>
+        </span>
         <span
           className="task-card-priority"
           style={{ color: priority.color, background: priority.bg }}
@@ -37,7 +40,7 @@ export default function TaskCard({ task, onClick, dragHandleProps }) {
           border-left: 3px solid var(--ink);
           border-radius: var(--radius-sm);
           padding: 10px 12px 12px;
-          cursor: pointer;
+          cursor: grab;
           box-shadow: var(--shadow-card);
           transition: transform 0.12s ease, box-shadow 0.12s ease;
           font-family: var(--font-body);
@@ -46,11 +49,25 @@ export default function TaskCard({ task, onClick, dragHandleProps }) {
           transform: translateY(-1px);
           box-shadow: 0 6px 16px rgba(8, 30, 74, 0.12);
         }
+        .task-card:active {
+          cursor: grabbing;
+        }
         .task-card-top {
           display: flex;
           align-items: center;
           justify-content: space-between;
           margin-bottom: 6px;
+        }
+        .task-card-identity {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .task-card-grip {
+          color: var(--slate);
+          font-size: 13px;
+          letter-spacing: -3px;
+          opacity: 0.65;
         }
         .task-card-id {
           font-size: 11px;

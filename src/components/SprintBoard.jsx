@@ -1,3 +1,4 @@
+import { useState } from "react";
 import TaskCard from "./TaskCard.jsx";
 import SprintBacklog from "./SprintBacklog.jsx";
 
@@ -35,6 +36,7 @@ export default function SprintBoard({
   onReleaseSpecificBacklogTask,
   onDeleteSpecificBacklogTask,
 }) {
+  const [dropTarget, setDropTarget] = useState(null);
   const total = tasks.length;
   const done = tasks.filter((t) => t.status === "done").length;
   const pct = total ? Math.round((done / total) * 100) : 0;
@@ -111,10 +113,14 @@ export default function SprintBoard({
             <div
               key={col.key}
               className="board-column"
-              onDragOver={(e) => e.preventDefault()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (e.target === e.currentTarget) setDropTarget(null);
+              }}
               onDrop={(e) => {
                 const taskId = e.dataTransfer.getData("text/task-id");
                 if (taskId) onDropTask(taskId, col.key);
+                setDropTarget(null);
               }}
             >
               <div className="board-column-head">
@@ -127,9 +133,38 @@ export default function SprintBoard({
                   <div
                     key={task.id}
                     draggable
-                    onDragStart={(e) =>
-                      e.dataTransfer.setData("text/task-id", task.id)
-                    }
+                    className={`task-card-drag-wrapper ${
+                      dropTarget?.taskId === task.id
+                        ? `is-drop-${dropTarget.placement}`
+                        : ""
+                    }`}
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/task-id", task.id);
+                    }}
+                    onDragEnd={() => setDropTarget(null)}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const placement = e.clientY < rect.top + rect.height / 2
+                        ? "before"
+                        : "after";
+                      setDropTarget({ taskId: task.id, placement });
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const draggedTaskId = e.dataTransfer.getData("text/task-id");
+                      if (draggedTaskId && draggedTaskId !== task.id) {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const placement = e.clientY < rect.top + rect.height / 2
+                          ? "before"
+                          : "after";
+                        onDropTask(draggedTaskId, col.key, task.id, placement);
+                      }
+                      setDropTarget(null);
+                    }}
                   >
                     <TaskCard task={task} onClick={onTaskClick} />
                   </div>

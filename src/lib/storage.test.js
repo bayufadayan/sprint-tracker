@@ -8,6 +8,7 @@ import {
   releaseSpecificBacklogTask,
   saveSprint,
   saveTask,
+  updateTaskPosition,
 } from "./storage.js";
 
 function resetLocalStorage() {
@@ -71,4 +72,28 @@ test("mengeluarkan task backlog khusus ke To Do sprint tujuan", () => {
   assert.equal(released.sprintId, "SPR-2");
   assert.equal(released.status, "todo");
   assert.equal(released.specificBacklogSprintId, undefined);
+});
+
+test("menyimpan urutan task saat dipindah ke atas dan ke bawah", () => {
+  resetLocalStorage();
+  const first = saveTask({ title: "Pertama", sprintId: "SPR-1", status: "todo" });
+  const second = saveTask({ title: "Kedua", sprintId: "SPR-1", status: "todo" });
+  const third = saveTask({ title: "Ketiga", sprintId: "SPR-1", status: "todo" });
+
+  updateTaskPosition(third.id, "todo", first.id, "before");
+  assert.deepEqual(getTasks().map((task) => task.id), [third.id, first.id, second.id]);
+
+  updateTaskPosition(third.id, "todo", second.id, "after");
+  assert.deepEqual(getTasks().map((task) => task.id), [first.id, second.id, third.id]);
+});
+
+test("menaruh task di posisi yang dipilih saat pindah kolom", () => {
+  resetLocalStorage();
+  const doing = saveTask({ title: "Doing", sprintId: "SPR-1", status: "doing" });
+  const first = saveTask({ title: "Pertama", sprintId: "SPR-1", status: "todo" });
+  const second = saveTask({ title: "Kedua", sprintId: "SPR-1", status: "todo" });
+
+  updateTaskPosition(doing.id, "todo", second.id, "before");
+  const todoTasks = getTasks().filter((task) => task.status === "todo");
+  assert.deepEqual(todoTasks.map((task) => task.id), [first.id, doing.id, second.id]);
 });

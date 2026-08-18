@@ -16,7 +16,7 @@ import {
   saveTasks,
   deleteTask,
   deleteTasks,
-  updateTaskStatus,
+  updateTaskPosition,
   createSprintContinuation,
   releaseSpecificBacklogTask,
 } from "./lib/storage.js";
@@ -149,8 +149,8 @@ export default function App() {
     setActiveSprintId(null);
   }
 
-  function handleDropTask(taskId, status) {
-    updateTaskStatus(taskId, status);
+  function handleDropTask(taskId, status, targetTaskId = null, placement = "after") {
+    updateTaskPosition(taskId, status, targetTaskId, placement);
     refresh();
   }
 
@@ -202,6 +202,7 @@ export default function App() {
             tasks={backlogTasks}
             onTaskClick={(task) => setTaskModal({ task })}
             onAddTask={() => setTaskModal({ forSprintId: null })}
+            onDropTask={handleDropTask}
           />
         )}
       </main>
